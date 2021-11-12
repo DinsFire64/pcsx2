@@ -19,6 +19,7 @@
 
 #include "SaveState.h"
 #include "USB/configuration.h"
+#include "USB/platcompat.h"
 #include "USB/qemu-usb/hid.h"
 
 #include <list>

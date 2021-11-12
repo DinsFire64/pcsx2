@@ -13,16 +13,26 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Used OBS as example
-
 #include "PrecompiledHeader.h"
 
-#include <wx/fileconf.h>
+#include <stdio.h>
 
-#include "common/IniInterface.h"
+#include <vector>
+#include <ghc/filesystem.h>
+
+#include <wx/wx.h>
+#include <wx/collpane.h>
+#include <wx/filepicker.h>
+#include <wx/slider.h>
+#include <wx/spinctrl.h>
+#include <wx/gbsizer.h>
+#include <wx/listctrl.h>
+
+#include "gui/AppCoreThread.h"
+
 #include "gui/AppConfig.h"
 
-#include "USB/Win32/Config_usb.h"
+#include "usb-python2-raw.h"
 
 #include <commctrl.h>
 #include "usb-python2-raw.h"
@@ -37,28 +47,25 @@ namespace usb_python2
 {
 	namespace raw
 	{
-		HWND dgHwnd2 = NULL;
 		uint32_t axisDiff[32]; //previous axes values
 		bool axisPass2 = false;
 		uint32_t uniqueKeybindIdx = 0;
 
-		std::wstring getKeyLabel(const KeyMapping key)
+		wxString getKeyLabel(const KeyMapping key)
 		{
-			TCHAR tmp[256] = {0};
-
 			if (key.bindType == 0)
-				swprintf_s(tmp, 255, L"Button %d", key.value);
+				return wxString::Format("Button %d", key.value);
 			else if (key.bindType == 1)
-				swprintf_s(tmp, 255, L"%s Axis", axisLabelList[key.value]);
+				return wxString::Format("%s Axis", axisLabelList[key.value]);
 			else if (key.bindType == 2)
-				swprintf_s(tmp, 255, L"Hat %d", key.value);
+				return wxString::Format("Hat %d", key.value);
 			else if (key.bindType == 3)
-				swprintf_s(tmp, 255, L"%s", GetVKStringW(key.value));
+				return wxString::Format("%s", GetVKStringW(key.value));
 
-			return std::wstring(tmp);
+			return wxEmptyString;
 		}
 
-		inline bool MapExists(const MapVector& maps, const std::wstring& hid)
+		inline bool MapExists(const MapVector& maps, const wxString hid)
 		{
 			for (auto& it : maps)
 				if (!it.hidPath.compare(hid))
@@ -72,16 +79,14 @@ namespace usb_python2
 
 			uniqueKeybindIdx = 0;
 
-			WCHAR sec[1024] = {0}, bind[32] = {0};
-			int v = 0;
 			for (int j = 0; j < 25; j++)
 			{
-				std::wstring hid, tmp;
+				TSTDSTRING hid;
 
 				if (LoadSetting(dev_type, j, "RAW DEVICE", TEXT("HID"), hid) && !hid.empty() && !MapExists(maps, hid))
 				{
 					Mappings m;
-					ZeroMemory(&m, sizeof(Mappings));
+					memset(&m, 0, sizeof(Mappings));
 					maps.push_back(m);
 					Mappings& ptr = maps.back();
 
@@ -90,21 +95,24 @@ namespace usb_python2
 
 					for (uint32_t targetBind = 0; targetBind < buttonLabelList.size(); targetBind++)
 					{
-						if (LoadSetting(dev_type, j, "RAW DEVICE", buttonLabelList[targetBind], tmp))
+						TSTDSTRING _tmp;
+						if (LoadSetting(dev_type, j, "RAW DEVICE", buttonLabelList[targetBind], _tmp))
 						{
+							wxString tmp = _tmp;
+
 							while (tmp.size() > 0)
 							{
 								auto idx = tmp.find_first_of(L',');
 
-								if (idx == std::wstring::npos)
+								if (idx == wxString::npos)
 									idx = tmp.size();
 
-								auto substr = std::wstring(tmp.begin(), tmp.begin() + idx);
+								auto substr = wxString(tmp.begin(), tmp.begin() + idx);
 
 								uint32_t buttonType = 0;
 								uint32_t value = 0;
 								int isOneshot = 0;
-								swscanf_s(substr.c_str(), L"%02X|%08X|%d", &buttonType, &value, &isOneshot);
+								wxSscanf(substr, "%02X|%08X|%d", &buttonType, &value, &isOneshot);
 
 								KeyMapping keybindMapping = {
 									uniqueKeybindIdx++,
@@ -120,7 +128,6 @@ namespace usb_python2
 					}
 				}
 			}
-			return;
 		}
 
 		void SaveMappings(const char* dev_type, MapVector& maps)
@@ -136,7 +143,7 @@ namespace usb_python2
 			{
 				if (it.mappings.size() > 0)
 				{
-					SaveSetting<std::wstring>(dev_type, numDevice, "RAW DEVICE", TEXT("HID"), it.hidPath);
+					SaveSetting(dev_type, numDevice, "RAW DEVICE", TEXT("HID"), it.hidPath.ToStdWstring());
 
 					std::map<int, std::vector<KeyMapping>> mapByKeybind;
 
@@ -145,557 +152,502 @@ namespace usb_python2
 
 					for (auto& bindIt : mapByKeybind)
 					{
-						std::wstring val;
+						wxString val;
 
 						for (auto& keymap : bindIt.second)
 						{
-							WCHAR tmp[16] = {0};
-							swprintf_s(tmp, 255, L"%02X|%08X|%d", keymap.bindType, keymap.value, keymap.isOneshot);
+							auto tmp = wxString::Format("%02X|%08X|%d", keymap.bindType, keymap.value, keymap.isOneshot);
 
 							if (val.size() > 0)
 								val.append(L",");
 
-							val.append(std::wstring(tmp));
+							val.append(tmp);
 						}
 
-						SaveSetting<std::wstring>(dev_type, numDevice, "RAW DEVICE", buttonLabelList[bindIt.first], val.c_str());
+						SaveSetting(dev_type, numDevice, "RAW DEVICE", buttonLabelList[bindIt.first], val.ToStdWstring());
 					}
 				}
 
 				numDevice++;
 			}
-
-			return;
 		}
 
-		void populateListHeaders(HWND hWnd)
+		class Python2RawConfigDialog : public wxDialog
 		{
-			auto dlgHwd = GetDlgItem(hWnd, IDC_LIST_BOUND_KEYS);
-			LVCOLUMN LvCol;
-			memset(&LvCol, 0, sizeof(LvCol));
-			LvCol.mask = LVCF_TEXT | LVCF_SUBITEM;
-			LvCol.pszText = TEXT("Keybind Name");
-			ListView_InsertColumn(dlgHwd, 0, &LvCol);
-			LvCol.pszText = TEXT("Button");
-			ListView_InsertColumn(GetDlgItem(hWnd, IDC_LIST_BOUND_KEYS), 1, &LvCol);
-			LvCol.pszText = TEXT("Oneshot");
-			ListView_InsertColumn(GetDlgItem(hWnd, IDC_LIST_BOUND_KEYS), 2, &LvCol);
-			LvCol.pszText = TEXT("Device");
-			ListView_InsertColumn(GetDlgItem(hWnd, IDC_LIST_BOUND_KEYS), 3, &LvCol);
+			wxChoice* gameListChoice;
+			std::vector<wxString> gameList;
+			wxListView* keybindListBox;
+			wxListView* keybindListBox2;
+			bool captureButton = false;
 
-			ListView_SetColumnWidth(dlgHwd, 0, LVSCW_AUTOSIZE_USEHEADER);
-			ListView_SetColumnWidth(dlgHwd, 1, LVSCW_AUTOSIZE_USEHEADER);
-			ListView_SetColumnWidth(dlgHwd, 2, LVSCW_AUTOSIZE_USEHEADER);
-			ListView_SetColumnWidth(dlgHwd, 3, LVSCW_AUTOSIZE_USEHEADER);
-		}
+			const int ID_BIND_BUTTON = 5000;
+			const int ID_UNBIND_BUTTON = 5001;
+			const int ID_ONESHOT_BUTTON = 5002;
 
-		void populateMappingButtons(HWND hWnd)
-		{
-			auto listItem = GetDlgItem(hWnd, IDC_LIST_AVAILABLE_MAPPINGS);
-			ListView_DeleteAllItems(listItem);
-
-			LVCOLUMN LvCol;
-			memset(&LvCol, 0, sizeof(LvCol));
-			LvCol.mask = LVCF_TEXT | LVCF_SUBITEM;
-			LvCol.pszText = TEXT("Keybind");
-			ListView_InsertColumn(listItem, 0, &LvCol);
-
-			for (size_t i = 0; i < buttonLabelList.size(); i++)
+		public:
+			Python2RawConfigDialog(std::vector<wxString> gameList)
+				: wxDialog(nullptr, wxID_ANY, _("Python 2 Configuration"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER)
+				, gameList(gameList)
 			{
-				LVITEM lvItem;
-				memset(&lvItem, 0, sizeof(lvItem));
-				lvItem.mask = LVIF_TEXT | LVIF_PARAM;
-				lvItem.cchTextMax = 256;
-				lvItem.iItem = i;
-				lvItem.iSubItem = 0;
-				lvItem.pszText = buttonLabelList[i];
-				lvItem.lParam = (LPARAM)i;
-				ListView_InsertItem(listItem, &lvItem);
+				#ifdef _WIN32
+				InitHid();
+
+				auto hW = GetHWND();
+				RAWINPUTDEVICE rid[3];
+				rid[0].usUsagePage = 0x01;
+				rid[0].usUsage = 0x05;
+				rid[0].dwFlags = hW ? RIDEV_INPUTSINK : RIDEV_REMOVE; // adds game pad
+				rid[0].hwndTarget = hW;
+
+				rid[1].usUsagePage = 0x01;
+				rid[1].usUsage = 0x04;
+				rid[1].dwFlags = hW ? RIDEV_INPUTSINK : RIDEV_REMOVE; // adds joystick
+				rid[1].hwndTarget = hW;
+
+				rid[2].usUsagePage = 0x01;
+				rid[2].usUsage = 0x06;
+				rid[2].dwFlags = hW ? RIDEV_INPUTSINK /*| RIDEV_NOLEGACY*/ : RIDEV_REMOVE; // adds HID keyboard and also ignores legacy keyboard messages
+				rid[2].hwndTarget = hW;
+
+				RegisterRawInputDevices(rid, 3, sizeof(rid[0]));
+				#endif
+
+				auto* padding = new wxBoxSizer(wxVERTICAL);
+				auto* topBox = new wxBoxSizer(wxVERTICAL);
+
+				wxArrayString gameListArray;
+				for (auto& game : gameList)
+					gameListArray.Add(game);
+
+				auto* gameListBox = new wxGridBagSizer(18, 18);
+				gameListChoice = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, gameListArray);
+
+				auto* gameListLabel = new wxStaticText(this, wxID_ANY, _("Game Entry:"));
+				gameListBox->Add(gameListLabel, wxGBPosition(0, 0), wxDefaultSpan, wxALIGN_RIGHT | wxALIGN_CENTRE_VERTICAL);
+				gameListBox->Add(gameListChoice, wxGBPosition(0, 1), wxGBSpan(0, 8), wxEXPAND);
+				gameListBox->AddGrowableCol(1);
+
+				keybindListBox = new wxListView(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL);
+				keybindListBox->AppendColumn("Keybinds");
+				keybindListBox->SetColumnWidth(0, wxLIST_AUTOSIZE_USEHEADER);
+
+				keybindListBox2 = new wxListView(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT);
+				keybindListBox2->AppendColumn("Keybind");
+				keybindListBox2->SetColumnWidth(0, 150);
+				keybindListBox2->AppendColumn("Button");
+				keybindListBox2->SetColumnWidth(1, 100);
+				keybindListBox2->AppendColumn("Oneshot");
+				keybindListBox2->SetColumnWidth(2, 75);
+				keybindListBox2->AppendColumn("Device");
+
+				gameListBox->Add(keybindListBox, wxGBPosition(1, 0), wxGBSpan(12, 6), wxEXPAND);
+				gameListBox->Add(keybindListBox2, wxGBPosition(1, 6), wxGBSpan(12, 12), wxEXPAND);
+				topBox->Add(gameListBox, wxSizerFlags().Expand());
+
+				auto* buttonBox = new wxBoxSizer(wxHORIZONTAL);
+				auto bindButton = new wxButton(this, ID_BIND_BUTTON, "Bind Key", wxDefaultPosition, wxSize(100, 25), 0);
+				auto oneshotToggleButton = new wxButton(this, ID_ONESHOT_BUTTON, "Toggle Oneshot", wxDefaultPosition, wxSize(100, 25), 0);
+				auto unbindButton = new wxButton(this, ID_UNBIND_BUTTON, "Unbind Key", wxDefaultPosition, wxSize(100, 25), 0);
+				buttonBox->Add(bindButton, wxSizerFlags().Left());
+				buttonBox->AddStretchSpacer();
+				buttonBox->Add(oneshotToggleButton, wxSizerFlags().Right());
+				buttonBox->Add(unbindButton, wxSizerFlags().Right());
+
+				topBox->AddSpacer(4);
+				topBox->Add(buttonBox, wxSizerFlags().Expand());
+				topBox->AddSpacer(16);
+				topBox->Add(CreateStdDialogButtonSizer(wxOK | wxCANCEL), wxSizerFlags().Right());
+
+				padding->Add(topBox, wxSizerFlags().Expand().Border(wxALL, 5));
+				SetSizerAndFit(padding);
+
+				SetMaxSize(wxSize(wxDefaultCoord, GetMinSize().y));
+
+				Bind(wxEVT_BUTTON, &Python2RawConfigDialog::OnBindButton, this, ID_BIND_BUTTON);
+				Bind(wxEVT_BUTTON, &Python2RawConfigDialog::OnUnbindButton, this, ID_UNBIND_BUTTON);
+				Bind(wxEVT_BUTTON, &Python2RawConfigDialog::OnOneshotButton, this, ID_ONESHOT_BUTTON);
 			}
 
-			ListView_SetColumnWidth(listItem, 0, LVSCW_AUTOSIZE_USEHEADER);
-		}
-
-		void populateMappings(HWND hW)
-		{
-			auto lv = GetDlgItem(hW, IDC_LIST_BOUND_KEYS);
-			LVITEM lvItem;
-			memset(&lvItem, 0, sizeof(lvItem));
-
-			ListView_DeleteAllItems(lv);
-
-			lvItem.mask = LVIF_TEXT | LVIF_PARAM;
-			lvItem.cchTextMax = 256;
-			lvItem.iItem = 0;
-			lvItem.iSubItem = 0;
-
-			TCHAR tmp[256];
-			for (size_t mapIdx = 0; mapIdx < mapVector.size(); mapIdx++)
+			#ifdef _WIN32
+			WXLRESULT MSWWindowProc(WXUINT uMsg, WXWPARAM wParam, WXLPARAM lParam)
 			{
-				for (auto &bindIt : mapVector[mapIdx].mappings)
+				switch (uMsg)
 				{
-					lvItem.iItem = ListView_GetItemCount(lv);
-					lvItem.pszText = buttonLabelList[bindIt.keybindId];
-					lvItem.lParam = (mapIdx << 16) | bindIt.uniqueId;
-					ListView_InsertItem(lv, &lvItem);
+					case WM_INPUT:
+						auto ret = S_FALSE;
 
-					swprintf_s(tmp, 255, L"%s", getKeyLabel(bindIt).c_str());
-					ListView_SetItemText(lv, lvItem.iItem, 1, tmp);
+						if (captureButton)
+						{
+							ret = 0;
 
-					swprintf_s(tmp, 255, L"%s", bindIt.isOneshot ? L"On" : L"Off");
-					ListView_SetItemText(lv, lvItem.iItem, 2, tmp);
+							UINT bufferSize;
+							GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &bufferSize, sizeof(RAWINPUTHEADER));
 
-					swprintf_s(tmp, 255, L"%s", mapVector[mapIdx].devName.c_str());
-					ListView_SetItemText(lv, lvItem.iItem, 3, tmp);
+							auto pRawInput = (PRAWINPUT)malloc(bufferSize);
+							if (!pRawInput)
+								break;
+
+							if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, pRawInput, &bufferSize, sizeof(RAWINPUTHEADER)) > 0)
+								ParseRawInput(pRawInput);
+
+							free(pRawInput);
+
+							if (!captureButton)
+								ResetState();
+						}
+
+						return ret;
 				}
-			}
-		}
 
-		static uint32_t getCurrentSelectedTargetBind(HWND hW)
-		{
-			auto lhW = GetDlgItem(hW, IDC_LIST_AVAILABLE_MAPPINGS);
-			LVITEM lvItem;
-			memset(&lvItem, 0, sizeof(lvItem));
-			auto sel = ListView_GetNextItem(lhW, -1, LVNI_SELECTED);
-			if (sel < 0)
-				return -1;
-
-			lvItem.iItem = sel;
-			lvItem.mask = LVIF_PARAM;
-			ListView_GetItem(lhW, &lvItem);
-			return (uint32_t)lvItem.lParam;
-		}
-
-		bool captureButton = false;
-
-		static void ParseRawInput(PRAWINPUT pRawInput, HWND hW)
-		{
-			PHIDP_PREPARSED_DATA pPreparsedData = NULL;
-			HIDP_CAPS Caps;
-			PHIDP_BUTTON_CAPS pButtonCaps = NULL;
-			PHIDP_VALUE_CAPS pValueCaps = NULL;
-			USHORT capsLength;
-			UINT bufferSize;
-			USAGE usage[32];
-			ULONG usageLength;
-			TCHAR name[1024] = {0};
-			UINT nameSize = 1024;
-			UINT pSize;
-			RID_DEVICE_INFO devInfo;
-			std::wstring devName;
-			//DevInfo_t            mapDevInfo;
-			Mappings* mapping = NULL;
-			TCHAR buf[256];
-			//std::pair<MappingsMap::iterator, bool> iter;
-
-			//
-			// Get the preparsed data block
-			//
-			GetRawInputDeviceInfo(pRawInput->header.hDevice, RIDI_DEVICENAME, name, &nameSize);
-			pSize = sizeof(devInfo);
-			GetRawInputDeviceInfo(pRawInput->header.hDevice, RIDI_DEVICEINFO, &devInfo, &pSize);
-
-			if (devInfo.dwType == RIM_TYPEKEYBOARD)
-			{
-				devName = TEXT("Keyboard");
-			}
-			else
-			{
-				CHECK(GetRawInputDeviceInfo(pRawInput->header.hDevice, RIDI_PREPARSEDDATA, NULL, &bufferSize) == 0);
-				CHECK(pPreparsedData = (PHIDP_PREPARSED_DATA)malloc(bufferSize));
-				CHECK((int)GetRawInputDeviceInfo(pRawInput->header.hDevice, RIDI_PREPARSEDDATA, pPreparsedData, &bufferSize) >= 0);
-				CHECK(HidP_GetCaps(pPreparsedData, &Caps) == HIDP_STATUS_SUCCESS);
-
-				devName = name;
-				std::transform(devName.begin(), devName.end(), devName.begin(), ::toupper);
+				return wxDialog::MSWWindowProc(uMsg, wParam, lParam);
 			}
 
-			for (auto& it : mapVector)
+			void ParseRawInput(PRAWINPUT pRawInput)
 			{
-				if (it.hidPath == devName)
+				PHIDP_PREPARSED_DATA pPreparsedData = NULL;
+				HIDP_CAPS Caps;
+				PHIDP_BUTTON_CAPS pButtonCaps = NULL;
+				PHIDP_VALUE_CAPS pValueCaps = NULL;
+				USHORT capsLength;
+				UINT bufferSize;
+				USAGE usage[32];
+				ULONG usageLength;
+				TCHAR name[1024] = {0};
+				UINT nameSize = 1024;
+				UINT pSize;
+				RID_DEVICE_INFO devInfo;
+				std::wstring devName;
+				Mappings* mapping = NULL;
+				TCHAR buf[256];
+
+				//
+				// Get the preparsed data block
+				//
+				GetRawInputDeviceInfo(pRawInput->header.hDevice, RIDI_DEVICENAME, name, &nameSize);
+				pSize = sizeof(devInfo);
+				GetRawInputDeviceInfo(pRawInput->header.hDevice, RIDI_DEVICEINFO, &devInfo, &pSize);
+
+				if (devInfo.dwType == RIM_TYPEKEYBOARD)
 				{
-					mapping = &(it);
-					break;
+					devName = TEXT("Keyboard");
 				}
-			}
-
-			if (mapping == NULL)
-			{
-				Mappings m; // = new Mappings;
-				ZeroMemory(&m, sizeof(Mappings));
-				mapVector.push_back(m);
-				mapping = &mapVector.back();
-				mapping->devName = devName;
-				mapping->hidPath = devName;
-			}
-			//TODO get real dev name, probably from registry (see PAD Windows)
-			if (!mapping->devName.length())
-				mapping->devName = devName;
-
-			const auto targetBind = getCurrentSelectedTargetBind(hW);
-			if (targetBind == -1)
-			{
-				// Nothing is actually selected, bail early
-				captureButton = false;
-				return;
-			}
-
-			if (devInfo.dwType == RIM_TYPEKEYBOARD &&
-				(pRawInput->data.keyboard.Flags & RI_KEY_BREAK) != RI_KEY_BREAK)
-			{
-				if (pRawInput->data.keyboard.VKey == 0xff)
-					return; //TODO
-				if (pRawInput->data.keyboard.VKey == VK_ESCAPE)
+				else
 				{
-					//resetState(hW);
+					CHECK(GetRawInputDeviceInfo(pRawInput->header.hDevice, RIDI_PREPARSEDDATA, NULL, &bufferSize) == 0);
+					CHECK(pPreparsedData = (PHIDP_PREPARSED_DATA)malloc(bufferSize));
+					CHECK((int)GetRawInputDeviceInfo(pRawInput->header.hDevice, RIDI_PREPARSEDDATA, pPreparsedData, &bufferSize) >= 0);
+					CHECK(HidP_GetCaps(pPreparsedData, &Caps) == HIDP_STATUS_SUCCESS);
+
+					devName = name;
+					std::transform(devName.begin(), devName.end(), devName.begin(), ::toupper);
+				}
+
+				for (auto& it : mapVector)
+				{
+					if (it.hidPath == devName)
+					{
+						mapping = &(it);
+						break;
+					}
+				}
+
+				if (mapping == NULL)
+				{
+					Mappings m; // = new Mappings;
+					ZeroMemory(&m, sizeof(Mappings));
+					mapVector.push_back(m);
+					mapping = &mapVector.back();
+					mapping->devName = devName;
+					mapping->hidPath = devName;
+				}
+				//TODO get real dev name, probably from registry (see PAD Windows)
+				if (!mapping->devName.length())
+					mapping->devName = devName;
+
+				const auto targetBind = keybindListBox->GetFirstSelected();
+				if (targetBind == -1)
+				{
+					// Nothing is actually selected, bail early
+					captureButton = false;
 					return;
 				}
 
-				swprintf_s(buf, TEXT("Captured KB button %d"), pRawInput->data.keyboard.VKey);
-				SendDlgItemMessage(dgHwnd2, IDC_STATIC_CAP, WM_SETTEXT, 0, (LPARAM)buf);
-
-				KeyMapping keybindMapping = {
-					uniqueKeybindIdx++,
-					targetBind,
-					KeybindType_Keyboard,
-					pRawInput->data.keyboard.VKey};
-				mapping->mappings.push_back(keybindMapping);
-
-				captureButton = false;
-			}
-			else
-			{
-				// Button caps
-				CHECK(pButtonCaps = (PHIDP_BUTTON_CAPS)malloc(sizeof(HIDP_BUTTON_CAPS) * Caps.NumberInputButtonCaps));
-
-				capsLength = Caps.NumberInputButtonCaps;
-				CHECK(HidP_GetButtonCaps(HidP_Input, pButtonCaps, &capsLength, pPreparsedData) == HIDP_STATUS_SUCCESS);
-				int numberOfButtons = pButtonCaps->Range.UsageMax - pButtonCaps->Range.UsageMin + 1;
-
-				usageLength = numberOfButtons;
-				CHECK(
-					HidP_GetUsages(
-						HidP_Input, pButtonCaps->UsagePage, 0, usage, &usageLength, pPreparsedData,
-						(PCHAR)pRawInput->data.hid.bRawData, pRawInput->data.hid.dwSizeHid) == HIDP_STATUS_SUCCESS);
-
-				if (usageLength > 0) //Using first button only though
+				if (devInfo.dwType == RIM_TYPEKEYBOARD &&
+					(pRawInput->data.keyboard.Flags & RI_KEY_BREAK) != RI_KEY_BREAK)
 				{
-					swprintf_s(buf, TEXT("Captured HID button %d"), usage[0]);
+					if (pRawInput->data.keyboard.VKey == 0xff)
+						return; //TODO
+					if (pRawInput->data.keyboard.VKey == VK_ESCAPE)
+					{
+						//resetState(hW);
+						return;
+					}
+
+					/*
+					swprintf_s(buf, TEXT("Captured KB button %d"), pRawInput->data.keyboard.VKey);
 					SendDlgItemMessage(dgHwnd2, IDC_STATIC_CAP, WM_SETTEXT, 0, (LPARAM)buf);
+					*/
 
 					KeyMapping keybindMapping = {
 						uniqueKeybindIdx++,
 						targetBind,
-						KeybindType_Button,
-						usage[0]};
+						KeybindType_Keyboard,
+						pRawInput->data.keyboard.VKey};
 					mapping->mappings.push_back(keybindMapping);
 
 					captureButton = false;
 				}
 				else
 				{
-					ULONG value = 0;
+					// Button caps
+					CHECK(pButtonCaps = (PHIDP_BUTTON_CAPS)malloc(sizeof(HIDP_BUTTON_CAPS) * Caps.NumberInputButtonCaps));
 
-					// Value caps
-					CHECK(pValueCaps = (PHIDP_VALUE_CAPS)malloc(sizeof(HIDP_VALUE_CAPS) * Caps.NumberInputValueCaps));
-					capsLength = Caps.NumberInputValueCaps;
-					CHECK(HidP_GetValueCaps(HidP_Input, pValueCaps, &capsLength, pPreparsedData) == HIDP_STATUS_SUCCESS);
+					capsLength = Caps.NumberInputButtonCaps;
+					CHECK(HidP_GetButtonCaps(HidP_Input, pButtonCaps, &capsLength, pPreparsedData) == HIDP_STATUS_SUCCESS);
+					int numberOfButtons = pButtonCaps->Range.UsageMax - pButtonCaps->Range.UsageMin + 1;
 
-					for (auto i = 0; i < Caps.NumberInputValueCaps; i++)
+					usageLength = numberOfButtons;
+					CHECK(
+						HidP_GetUsages(
+							HidP_Input, pButtonCaps->UsagePage, 0, usage, &usageLength, pPreparsedData,
+							(PCHAR)pRawInput->data.hid.bRawData, pRawInput->data.hid.dwSizeHid) == HIDP_STATUS_SUCCESS);
+
+					if (usageLength > 0) //Using first button only though
 					{
-						CHECK(
-							HidP_GetUsageValue(
-								HidP_Input, pValueCaps[i].UsagePage, 0, pValueCaps[i].Range.UsageMin, &value, pPreparsedData,
-								(PCHAR)pRawInput->data.hid.bRawData, pRawInput->data.hid.dwSizeHid) == HIDP_STATUS_SUCCESS);
+						/*
+						swprintf_s(buf, TEXT("Captured HID button %d"), usage[0]);
+						SendDlgItemMessage(dgHwnd2, IDC_STATIC_CAP, WM_SETTEXT, 0, (LPARAM)buf);
+						*/
 
-						uint32_t logical = pValueCaps[i].LogicalMax - pValueCaps[i].LogicalMin;
+						KeyMapping keybindMapping = {
+							uniqueKeybindIdx++,
+							targetBind,
+							KeybindType_Button,
+							usage[0]};
+						mapping->mappings.push_back(keybindMapping);
 
-						switch (pValueCaps[i].Range.UsageMin)
+						captureButton = false;
+					}
+					else
+					{
+						ULONG value = 0;
+
+						// Value caps
+						CHECK(pValueCaps = (PHIDP_VALUE_CAPS)malloc(sizeof(HIDP_VALUE_CAPS) * Caps.NumberInputValueCaps));
+						capsLength = Caps.NumberInputValueCaps;
+						CHECK(HidP_GetValueCaps(HidP_Input, pValueCaps, &capsLength, pPreparsedData) == HIDP_STATUS_SUCCESS);
+
+						for (auto i = 0; i < Caps.NumberInputValueCaps; i++)
 						{
-							case HID_USAGE_GENERIC_X:
-							case HID_USAGE_GENERIC_Y:
-							case HID_USAGE_GENERIC_Z:
-							case HID_USAGE_GENERIC_RX:
-							case HID_USAGE_GENERIC_RY:
-							case HID_USAGE_GENERIC_RZ:
+							CHECK(
+								HidP_GetUsageValue(
+									HidP_Input, pValueCaps[i].UsagePage, 0, pValueCaps[i].Range.UsageMin, &value, pPreparsedData,
+									(PCHAR)pRawInput->data.hid.bRawData, pRawInput->data.hid.dwSizeHid) == HIDP_STATUS_SUCCESS);
+
+							uint32_t logical = pValueCaps[i].LogicalMax - pValueCaps[i].LogicalMin;
+
+							switch (pValueCaps[i].Range.UsageMin)
 							{
-								auto axis = pValueCaps[i].Range.UsageMin - HID_USAGE_GENERIC_X;
-								if (axisPass2)
+								case HID_USAGE_GENERIC_X:
+								case HID_USAGE_GENERIC_Y:
+								case HID_USAGE_GENERIC_Z:
+								case HID_USAGE_GENERIC_RX:
+								case HID_USAGE_GENERIC_RY:
+								case HID_USAGE_GENERIC_RZ:
 								{
-									if ((uint32_t)abs((int)(axisDiff[axis] - value)) > (logical >> 2))
+									auto axis = pValueCaps[i].Range.UsageMin - HID_USAGE_GENERIC_X;
+									if (axisPass2)
+									{
+										if ((uint32_t)abs((int)(axisDiff[axis] - value)) > (logical >> 2))
+										{
+											axisPass2 = false;
+
+											/*
+											swprintf_s(buf, TEXT("Captured axis %d"), axis);
+											SendDlgItemMessage(dgHwnd2, IDC_STATIC_CAP, WM_SETTEXT, 0, (LPARAM)buf);
+											*/
+
+											KeyMapping keybindMapping = {
+												uniqueKeybindIdx++,
+												targetBind,
+												KeybindType_Axis,
+												axis};
+											mapping->mappings.push_back(keybindMapping);
+											captureButton = false;
+
+											goto Error;
+										}
+										break;
+									}
+									axisDiff[axis] = value;
+									break;
+								}
+
+								case 0x39: // Hat Switch
+									if (value < 0x8)
 									{
 										axisPass2 = false;
-										swprintf_s(buf, TEXT("Captured axis %d"), axis);
+
+										/*
+										swprintf_s(buf, TEXT("Captured hat switch %d"), value);
 										SendDlgItemMessage(dgHwnd2, IDC_STATIC_CAP, WM_SETTEXT, 0, (LPARAM)buf);
+										*/
 
 										KeyMapping keybindMapping = {
 											uniqueKeybindIdx++,
 											targetBind,
-											KeybindType_Axis,
-											axis};
+											KeybindType_Hat,
+											value};
 										mapping->mappings.push_back(keybindMapping);
 										captureButton = false;
 
 										goto Error;
 									}
 									break;
-								}
-								axisDiff[axis] = value;
-								break;
 							}
-
-							case 0x39: // Hat Switch
-								if (value < 0x8)
-								{
-									axisPass2 = false;
-									swprintf_s(buf, TEXT("Captured hat switch %d"), value);
-									SendDlgItemMessage(dgHwnd2, IDC_STATIC_CAP, WM_SETTEXT, 0, (LPARAM)buf);
-
-									KeyMapping keybindMapping = {
-										uniqueKeybindIdx++,
-										targetBind,
-										KeybindType_Hat,
-										value};
-									mapping->mappings.push_back(keybindMapping);
-									captureButton = false;
-
-									goto Error;
-								}
-								break;
 						}
+
+						axisPass2 = true;
 					}
-
-					axisPass2 = true;
 				}
+
+			Error:
+				SAFE_FREE(pPreparsedData);
+				SAFE_FREE(pButtonCaps);
+				SAFE_FREE(pValueCaps);
+			}
+			#endif
+
+			void OnBindButton(wxCommandEvent& ev)
+			{
+				printf("OnBindButton pressed!\n");
+				captureButton = true;
 			}
 
-		Error:
-			SAFE_FREE(pPreparsedData);
-			SAFE_FREE(pButtonCaps);
-			SAFE_FREE(pValueCaps);
-		}
-
-		static void Register(HWND hW)
-		{
-			RAWINPUTDEVICE rid[3];
-			rid[0].usUsagePage = 0x01;
-			rid[0].usUsage = 0x05;
-			rid[0].dwFlags = hW ? RIDEV_INPUTSINK : RIDEV_REMOVE; // adds game pad
-			rid[0].hwndTarget = hW;
-
-			rid[1].usUsagePage = 0x01;
-			rid[1].usUsage = 0x04;
-			rid[1].dwFlags = hW ? RIDEV_INPUTSINK : RIDEV_REMOVE; // adds joystick
-			rid[1].hwndTarget = hW;
-
-			rid[2].usUsagePage = 0x01;
-			rid[2].usUsage = 0x06;
-			rid[2].dwFlags = hW ? RIDEV_INPUTSINK /*| RIDEV_NOLEGACY*/ : RIDEV_REMOVE; // adds HID keyboard and also ignores legacy keyboard messages
-			rid[2].hwndTarget = hW;
-
-			if (!RegisterRawInputDevices(rid, 3, sizeof(rid[0])))
+			void OnUnbindButton(wxCommandEvent& ev)
 			{
-				SendDlgItemMessage(hW, IDC_STATIC_CAP, WM_SETTEXT, 0, (LPARAM)TEXT("Could not register raw input devices."));
-			}
-		}
+				printf("OnUnbindButton pressed!\n");
 
-		static void ResetState(HWND hW)
-		{
-			captureButton = false;
-			populateMappings(hW);
-		}
-
-		INT_PTR CALLBACK ConfigurePython2DlgProc(HWND hW, UINT uMsg, WPARAM wParam, LPARAM lParam)
-		{
-			switch (uMsg)
-			{
-				case WM_CREATE:
-					SetWindowLongPtr(hW, GWLP_USERDATA, lParam);
-					break;
-				case WM_INITDIALOG:
+				auto selectedIdx = keybindListBox2->GetFirstSelected();
+				while (selectedIdx != -1)
 				{
-					if (!InitHid())
-						return FALSE;
+					auto itemData = keybindListBox2->GetItemData(selectedIdx);
+					const size_t mapIdx = (itemData >> 16) & 0xffff;
+					const auto uniqueId = itemData & 0xffff;
 
-					dgHwnd2 = hW;
-					SetWindowLongPtr(hW, GWLP_USERDATA, lParam);
-
-					const Python2DlgConfig* cfg = (Python2DlgConfig*)lParam;
-
-					LoadMappings(Python2Device::TypeName(), mapVector);
-
-					SendDlgItemMessage(hW, IDC_COMBO1, CB_RESETCONTENT, 0, 0);
-					std::wstring selectedDevice;
-					LoadSetting(Python2Device::TypeName(), cfg->port, APINAME, N_DEVICE, selectedDevice);
-					for (auto i = 0; i != cfg->devList.size(); i++)
+					if (mapIdx < mapVector.size())
 					{
-						SendDlgItemMessageW(hW, IDC_COMBO1, CB_ADDSTRING, 0, (LPARAM)cfg->devList[i].c_str());
-						if (selectedDevice == cfg->devListGroups.at(i))
-						{
-							SendDlgItemMessage(hW, IDC_COMBO1, CB_SETCURSEL, i, i);
-						}
+						mapVector[mapIdx].mappings.erase(
+							std::remove_if(
+								mapVector[mapIdx].mappings.begin(),
+								mapVector[mapIdx].mappings.end(),
+								[uniqueId](KeyMapping& v) { return v.uniqueId == uniqueId; }),
+							mapVector[mapIdx].mappings.end());
 					}
 
-					Register(hW);
-					populateListHeaders(hW);
-					populateMappingButtons(hW);
-					ResetState(hW);
-
-					return TRUE;
+					selectedIdx = keybindListBox2->GetNextSelected(selectedIdx);
 				}
-				case WM_COMMAND:
-					if (HIWORD(wParam) == BN_CLICKED)
+
+				ResetState();
+			}
+
+			void OnOneshotButton(wxCommandEvent& ev)
+			{
+				printf("OnOneshotButton pressed!\n");
+
+				std::vector<long> selectedItemList;
+
+				auto selectedIdx = keybindListBox2->GetFirstSelected();
+				while (selectedIdx != -1)
+				{
+					auto itemData = keybindListBox2->GetItemData(selectedIdx);
+					const size_t mapIdx = (itemData >> 16) & 0xffff;
+					const auto uniqueId = itemData & 0xffff;
+
+					if (mapIdx < mapVector.size())
 					{
-						switch (LOWORD(wParam))
+						for (auto& it : mapVector[mapIdx].mappings)
 						{
-							case IDOK:
+							if (it.uniqueId == uniqueId)
 							{
-								INT_PTR res = RESULT_OK;
-
-								const Python2DlgConfig* cfg = (Python2DlgConfig*)GetWindowLongPtr(hW, GWLP_USERDATA);
-
-								// Save machine configuration selection
-								auto deviceIdx = ComboBox_GetCurSel(GetDlgItem(hW, IDC_COMBO1));
-								if (!SaveSetting<std::wstring>(Python2Device::TypeName(), cfg->port, APINAME, N_DEVICE, cfg->devListGroups[deviceIdx]))
-									res = RESULT_FAILED;
-
-								SaveMappings(Python2Device::TypeName(), mapVector);
-
-								EndDialog(hW, res);
-								return TRUE;
-							}
-
-							case IDCANCEL:
-								EndDialog(hW, RESULT_CANCELED);
-								return TRUE;
-
-							case IDC_BIND:
-								captureButton = true;
-								MSG_PRESS_ESC(hW);
-								SetTimer(hW, 1, 5000, nullptr);
-								return TRUE;
-
-							case IDC_ONESHOT:
-							{
-								int sel;
-								HWND lhW;
-								LVITEM lv;
-
-								lhW = GetDlgItem(hW, IDC_LIST_BOUND_KEYS);
-								while (1)
-								{
-									ZeroMemory(&lv, sizeof(LVITEM));
-									auto nextSel = ListView_GetNextItem(lhW, -1, LVNI_SELECTED);
-
-									if (nextSel < 0)
-										break;
-
-									sel = nextSel;
-
-									lv.iItem = sel;
-									lv.mask = LVIF_PARAM;
-									ListView_GetItem(lhW, &lv);
-									ListView_DeleteItem(lhW, sel);
-									ListView_EnsureVisible(lhW, sel, 0);
-
-									const size_t mapIdx = (lv.lParam >> 16) & 0xffff;
-									const auto uniqueId = lv.lParam & 0xffff;
-									if (mapIdx < mapVector.size())
-									{
-										for (auto& it : mapVector[mapIdx].mappings)
-										{
-											if (it.uniqueId == uniqueId)
-											{
-												it.isOneshot = !it.isOneshot;
-											}
-										}
-									}
-								}
-
-								ResetState(hW);
-
-								SetFocus(lhW);
-								ListView_SetItemState(lhW, sel, LVIS_SELECTED, LVIS_SELECTED);
-								ListView_EnsureVisible(lhW, sel, 1);
-
-								break;
-							}
-
-							case IDC_UNBIND:
-							{
-								int sel;
-								HWND lhW;
-								lhW = GetDlgItem(hW, IDC_LIST_BOUND_KEYS);
-								while (1)
-								{
-									LVITEM lv;
-									ZeroMemory(&lv, sizeof(LVITEM));
-									auto nextSel = ListView_GetNextItem(lhW, -1, LVNI_SELECTED);
-
-									if (nextSel < 0)
-										break;
-
-									sel = nextSel;
-
-									lv.iItem = sel;
-									lv.mask = LVIF_PARAM;
-									ListView_GetItem(lhW, &lv);
-									ListView_DeleteItem(lhW, sel);
-									ListView_EnsureVisible(lhW, sel, 0);
-
-									const size_t mapIdx = (lv.lParam >> 16) & 0xffff;
-									const auto uniqueId = lv.lParam & 0xffff;
-									if (mapIdx < mapVector.size())
-									{
-										mapVector[mapIdx].mappings.erase(
-											std::remove_if(
-												mapVector[mapIdx].mappings.begin(),
-												mapVector[mapIdx].mappings.end(),
-												[uniqueId](KeyMapping& v) { return v.uniqueId == uniqueId; }),
-											mapVector[mapIdx].mappings.end());
-									}
-								}
-
-								ResetState(hW);
-
-								if (sel - 1 >= 0)
-									sel -= 1;
-								else
-									sel = 0;
-
-								SetFocus(lhW);
-								ListView_SetItemState(lhW, sel, LVIS_SELECTED, LVIS_SELECTED);
-								ListView_EnsureVisible(lhW, sel, 1);
-
-								break;
+								it.isOneshot = !it.isOneshot;
 							}
 						}
 					}
-					break;
 
-				case WM_INPUT:
-					auto ret = S_FALSE;
-					if (captureButton)
-					{
-						ret = 0;
-						PRAWINPUT pRawInput;
-						UINT bufferSize;
-						UINT cbsize = sizeof(RAWINPUT);
-						GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &bufferSize, sizeof(RAWINPUTHEADER));
-						pRawInput = (PRAWINPUT)malloc(bufferSize);
-						if (!pRawInput)
-							break;
-						if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, pRawInput, &bufferSize, sizeof(RAWINPUTHEADER)) > 0)
-							ParseRawInput(pRawInput, hW);
-						free(pRawInput);
+					selectedItemList.push_back(selectedIdx);
 
-						if (!captureButton)
-							ResetState(hW);
-					}
-					DefWindowProc(hW, uMsg, wParam, lParam); //TODO should call for cleanup?
-					return ret;
+					selectedIdx = keybindListBox2->GetNextSelected(selectedIdx);
+				}
+
+				ResetState();
+
+				for (auto& idx : selectedItemList)
+					keybindListBox2->Select(idx, true);
+				keybindListBox2->SetFocus();
 			}
-			return FALSE;
+
+			void ResetState()
+			{
+				captureButton = false;
+				PopulateMappings();
+			}
+
+			void PopulateMappings()
+			{
+				keybindListBox2->DeleteAllItems();
+
+				auto itemIdx = 0;
+				for (size_t mapIdx = 0; mapIdx < mapVector.size(); mapIdx++)
+				{
+					for (auto& bindIt : mapVector[mapIdx].mappings)
+					{
+						auto lastItemIdx = keybindListBox2->InsertItem(itemIdx++, buttonLabelList[bindIt.keybindId]);
+						keybindListBox2->SetItem(lastItemIdx, 1, getKeyLabel(bindIt));
+						keybindListBox2->SetItem(lastItemIdx, 2, bindIt.isOneshot ? "On" : "Off");
+						keybindListBox2->SetItem(lastItemIdx, 3, mapVector[mapIdx].devName);
+						keybindListBox2->SetItemData(lastItemIdx, (mapIdx << 16) | bindIt.uniqueId);
+					}
+				}
+			}
+
+			void Load(Python2DlgConfig& config, wxString selectedDevice)
+			{
+				for (size_t i = 0; i != config.devList.size(); i++)
+				{
+					if (config.devListGroups[i] == selectedDevice)
+					{
+						gameListChoice->SetSelection(i);
+						break;
+					}
+				}
+
+				LoadMappings(config.dev_type, mapVector);
+
+				for (size_t i = 0; i < buttonLabelList.size(); i++)
+				{
+					keybindListBox->InsertItem(i, buttonLabelList[i]);
+				}
+
+				PopulateMappings();
+			}
+		};
+
+		void ConfigurePython2DlgProc(Python2DlgConfig& config)
+		{
+			ScopedCoreThreadPause paused_core;
+
+			TSTDSTRING selectedDevice;
+			LoadSetting(Python2Device::TypeName(), config.port, "python2", N_DEVICE, selectedDevice);
+
+			Python2RawConfigDialog dialog(config.devList);
+			dialog.Load(config, selectedDevice);
+
+			if (dialog.ShowModal() == wxID_OK)
+			{
+			}
+
+			paused_core.AllowResume();
 		}
-	} // namespace noop
+	} // namespace raw
 } // namespace usb_python2

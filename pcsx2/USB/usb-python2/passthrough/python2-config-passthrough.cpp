@@ -63,8 +63,8 @@ namespace usb_python2
 				gameListChoice = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, gameListArray);
 
 				gameListBox->Add(gameListChoice, wxGBPosition(0, 0), wxGBSpan(0, 12), wxEXPAND);
+				gameListBox->AddGrowableCol(0);
 
-				gameListBox->AddGrowableCol(1);
 				gameListSizer->Add(gameListBox, wxSizerFlags().Expand());
 
 				topBox->Add(gameListSizer, wxSizerFlags().Expand());

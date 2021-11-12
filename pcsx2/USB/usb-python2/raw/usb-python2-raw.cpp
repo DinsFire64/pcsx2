@@ -28,7 +28,7 @@ namespace usb_python2
 {
 	namespace raw
 	{
-		std::wstring getKeyLabel(const KeyMapping key);
+		wxString getKeyLabel(const KeyMapping key);
 
 		uint32_t axisDiff2[32]; //previous axes values
 		bool axisPass22 = false;
@@ -46,7 +46,7 @@ namespace usb_python2
 			TCHAR name[1024] = {0};
 			UINT nameSize = 1024;
 			RID_DEVICE_INFO devInfo = {0};
-			std::wstring devName;
+			TSTDSTRING devName;
 			USHORT capsLength = 0;
 			USAGE usage[32] = {0};
 			Mappings* mapping = NULL;
@@ -286,7 +286,7 @@ namespace usb_python2
 
 			LoadMappings(mDevType, mapVector);
 
-			std::wstring selectedDevice;
+			TSTDSTRING selectedDevice;
 			LoadSetting(Python2Device::TypeName(), mPort, APINAME, N_DEVICE, selectedDevice);
 
 			shared::rawinput::RegisterCallback(this);
@@ -299,7 +299,7 @@ namespace usb_python2
 			return 0;
 		}
 
-		void RawInputPad::UpdateKeyStates(std::wstring keybind)
+		void RawInputPad::UpdateKeyStates(TSTDSTRING keybind)
 		{
 			const auto currentTimestamp = wxDateTime::UNow();
 			while (keyStateUpdates[keybind].size() > 0)
@@ -324,7 +324,7 @@ namespace usb_python2
 			}
 		}
 
-		bool RawInputPad::GetKeyState(std::wstring keybind)
+		bool RawInputPad::GetKeyState(TSTDSTRING keybind)
 		{
 			UpdateKeyStates(keybind);
 
@@ -335,7 +335,7 @@ namespace usb_python2
 			return false;
 		}
 
-		bool RawInputPad::GetKeyStateOneShot(std::wstring keybind)
+		bool RawInputPad::GetKeyStateOneShot(TSTDSTRING keybind)
 		{
 			UpdateKeyStates(keybind);
 
@@ -350,7 +350,7 @@ namespace usb_python2
 			return isPressed;
 		}
 
-		double RawInputPad::GetKeyStateAnalog(std::wstring keybind)
+		double RawInputPad::GetKeyStateAnalog(TSTDSTRING keybind)
 		{
 			const auto it = currentInputStateAnalog.find(keybind);
 			if (it == currentInputStateAnalog.end())
@@ -358,28 +358,26 @@ namespace usb_python2
 			return it->second;
 		}
 
-		bool RawInputPad::IsKeybindAvailable(std::wstring keybind)
+		bool RawInputPad::IsKeybindAvailable(TSTDSTRING keybind)
 		{
 			return currentInputStateKeyboard.find(keybind) != currentInputStateKeyboard.end() || currentInputStatePad.find(keybind) != currentInputStatePad.end();
 		}
 
-		bool RawInputPad::IsAnalogKeybindAvailable(std::wstring keybind)
+		bool RawInputPad::IsAnalogKeybindAvailable(TSTDSTRING keybind)
 		{
 			return currentInputStateAnalog.find(keybind) != currentInputStateAnalog.end();
 		}
 
 // ---------
-#include "python2-config-raw-res.h"
-
-		INT_PTR CALLBACK ConfigurePython2DlgProc(HWND hW, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		void ConfigurePython2DlgProc(Python2DlgConfig& config);
 		int RawInputPad::Configure(int port, const char* dev_type, void* data)
 		{
 			Win32Handles* h = (Win32Handles*)data;
-			INT_PTR res = RESULT_FAILED;
+
 			if (shared::rawinput::Initialize(h->hWnd))
 			{
-				std::vector<std::wstring> devList;
-				std::vector<std::wstring> devListGroups;
+				std::vector<wxString> devList;
+				std::vector<wxString> devListGroups;
 
 				wxFileName iniPath = EmuFolders::Settings.Combine(wxString("Python2.ini"));
 				if (iniPath.FileExists())
@@ -393,7 +391,7 @@ namespace usb_python2
 					while (foundGroup)
 					{
 						if (groupName.StartsWith(L"GameEntry"))
-							devListGroups.push_back(std::wstring(groupName));
+							devListGroups.push_back(groupName);
 
 						foundGroup = hini->GetNextGroup(groupName, groupIdx);
 					}
@@ -407,15 +405,16 @@ namespace usb_python2
 						if (tmp.empty())
 							continue;
 
-						devList.push_back(std::wstring(tmp));
+						devList.push_back(tmp);
 					}
 				}
 
 				Python2DlgConfig config(port, dev_type, devList, devListGroups);
-				res = DialogBoxParam(h->hInst, MAKEINTRESOURCE(IDD_PYTHON2CONFIG), h->hWnd, ConfigurePython2DlgProc, (LPARAM)&config);
+				ConfigurePython2DlgProc(config);
 				shared::rawinput::Uninitialize();
 			}
-			return (int)res;
+
+			return 0;
 		}
 
 	} // namespace raw

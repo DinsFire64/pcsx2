@@ -49,121 +49,121 @@ namespace usb_python2
 			bool state;
 		};
 
-		const std::vector<wchar_t*> axisLabelList = {
-			L"X",
-			L"Y",
-			L"Z",
-			L"RX",
-			L"RY",
-			L"RZ"};
+		const std::vector<TCHAR*> axisLabelList = {
+			TEXT("X"),
+			TEXT("Y"),
+			TEXT("Z"),
+			TEXT("RX"),
+			TEXT("RY"),
+			TEXT("RZ")};
 
-		const std::vector<wchar_t*> buttonLabelList = {
+		const std::vector<TCHAR*> buttonLabelList = {
 			// Machine
-			L"Test",
-			L"Service",
-			L"Coin1",
-			L"Coin2",
+			TEXT("Test"),
+			TEXT("Service"),
+			TEXT("Coin1"),
+			TEXT("Coin2"),
 
 			// Guitar Freaks
-			L"GfP1Start",
-			L"GfP1Pick",
-			L"GfP1Wail",
-			L"GfP1EffectInc",
-			L"GfP1EffectDec",
-			L"GfP1NeckR",
-			L"GfP1NeckG",
-			L"GfP1NeckB",
+			TEXT("GfP1Start"),
+			TEXT("GfP1Pick"),
+			TEXT("GfP1Wail"),
+			TEXT("GfP1EffectInc"),
+			TEXT("GfP1EffectDec"),
+			TEXT("GfP1NeckR"),
+			TEXT("GfP1NeckG"),
+			TEXT("GfP1NeckB"),
 
-			L"GfP2Start",
-			L"GfP2Pick",
-			L"GfP2Wail",
-			L"GfP2EffectInc",
-			L"GfP2EffectDec",
-			L"GfP2NeckR",
-			L"GfP2NeckG",
-			L"GfP2NeckB",
+			TEXT("GfP2Start"),
+			TEXT("GfP2Pick"),
+			TEXT("GfP2Wail"),
+			TEXT("GfP2EffectInc"),
+			TEXT("GfP2EffectDec"),
+			TEXT("GfP2NeckR"),
+			TEXT("GfP2NeckG"),
+			TEXT("GfP2NeckB"),
 
 			// Drummania
-			L"DmStart",
-			L"DmSelectL",
-			L"DmSelectR",
-			L"DmHihat",
-			L"DmSnare",
-			L"DmHighTom",
-			L"DmLowTom",
-			L"DmCymbal",
-			L"DmBassDrum",
+			TEXT("DmStart"),
+			TEXT("DmSelectL"),
+			TEXT("DmSelectR"),
+			TEXT("DmHihat"),
+			TEXT("DmSnare"),
+			TEXT("DmHighTom"),
+			TEXT("DmLowTom"),
+			TEXT("DmCymbal"),
+			TEXT("DmBassDrum"),
 
 			// DDR
-			L"DdrP1Start",
-			L"DdrP1SelectL",
-			L"DdrP1SelectR",
-			L"DdrP1FootLeft",
-			L"DdrP1FootDown",
-			L"DdrP1FootUp",
-			L"DdrP1FootRight",
+			TEXT("DdrP1Start"),
+			TEXT("DdrP1SelectL"),
+			TEXT("DdrP1SelectR"),
+			TEXT("DdrP1FootLeft"),
+			TEXT("DdrP1FootDown"),
+			TEXT("DdrP1FootUp"),
+			TEXT("DdrP1FootRight"),
 
-			L"DdrP2Start",
-			L"DdrP2SelectL",
-			L"DdrP2SelectR",
-			L"DdrP2FootLeft",
-			L"DdrP2FootDown",
-			L"DdrP2FootUp",
-			L"DdrP2FootRight",
+			TEXT("DdrP2Start"),
+			TEXT("DdrP2SelectL"),
+			TEXT("DdrP2SelectR"),
+			TEXT("DdrP2FootLeft"),
+			TEXT("Ddr2FootDown"),
+			TEXT("Ddr2FootUp"),
+			TEXT("DdrP2FootRight"),
 
 			// Thrill Drive
-			L"ThrillDriveStart",
-			L"ThrillDriveGearUp",
-			L"ThrillDriveGearDown",
-			L"ThrillDriveWheelAnalog",
-			L"ThrillDriveWheelLeft",
-			L"ThrillDriveWheelRight",
-			L"ThrillDriveAccelAnalog",
-			L"ThrillDriveAccel",
-			L"ThrillDriveBrake",
-			L"ThrillDriveBrakeAnalog",
-			L"ThrillDriveSeatbelt",
+			TEXT("ThrillDriveStart"),
+			TEXT("ThrillDriveGearUp"),
+			TEXT("ThrillDriveGearDown"),
+			TEXT("ThrillDriveWheelAnalog"),
+			TEXT("ThrillDriveWheelLeft"),
+			TEXT("ThrillDriveWheelRight"),
+			TEXT("ThrillDriveAccelAnalog"),
+			TEXT("ThrillDriveAccel"),
+			TEXT("ThrillDriveBrake"),
+			TEXT("ThrillDriveBrakeAnalog"),
+			TEXT("ThrillDriveSeatbelt"),
 
 			// Toy's March
-			L"ToysMarchP1Start",
-			L"ToysMarchP1SelectL",
-			L"ToysMarchP1SelectR",
-			L"ToysMarchP1DrumL",
-			L"ToysMarchP1DrumR",
-			L"ToysMarchP1Cymbal",
+			TEXT("ToysMarchP1Start"),
+			TEXT("ToysMarchP1SelectL"),
+			TEXT("ToysMarchP1SelectR"),
+			TEXT("ToysMarchP1DrumL"),
+			TEXT("ToysMarchP1DrumR"),
+			TEXT("ToysMarchP1Cymbal"),
 
-			L"ToysMarchP2Start",
-			L"ToysMarchP2SelectL",
-			L"ToysMarchP2SelectR",
-			L"ToysMarchP2DrumL",
-			L"ToysMarchP2DrumR",
-			L"ToysMarchP2Cymbal",
+			TEXT("ToysMarchP2Start"),
+			TEXT("ToysMarchP2SelectL"),
+			TEXT("ToysMarchP2SelectR"),
+			TEXT("ToysMarchP2DrumL"),
+			TEXT("ToysMarchP2DrumR"),
+			TEXT("ToysMarchP2Cymbal"),
 
 			// ICCA Card Reader
-			L"KeypadP1_0",
-			L"KeypadP1_1",
-			L"KeypadP1_2",
-			L"KeypadP1_3",
-			L"KeypadP1_4",
-			L"KeypadP1_5",
-			L"KeypadP1_6",
-			L"KeypadP1_7",
-			L"KeypadP1_8",
-			L"KeypadP1_9",
-			L"KeypadP1_00",
-			L"KeypadP1InsertEject",
-			L"KeypadP2_0",
-			L"KeypadP2_1",
-			L"KeypadP2_2",
-			L"KeypadP2_3",
-			L"KeypadP2_4",
-			L"KeypadP2_5",
-			L"KeypadP2_6",
-			L"KeypadP2_7",
-			L"KeypadP2_8",
-			L"KeypadP2_9",
-			L"KeypadP2_00",
-			L"KeypadP2InsertEject",
+			TEXT("KeypadP1_0"),
+			TEXT("KeypadP1_1"),
+			TEXT("KeypadP1_2"),
+			TEXT("KeypadP1_3"),
+			TEXT("KeypadP1_4"),
+			TEXT("KeypadP1_5"),
+			TEXT("KeypadP1_6"),
+			TEXT("KeypadP1_7"),
+			TEXT("KeypadP1_8"),
+			TEXT("KeypadP1_9"),
+			TEXT("KeypadP1_00"),
+			TEXT("KeypadP1InsertEject"),
+			TEXT("KeypadP2_0"),
+			TEXT("KeypadP2_1"),
+			TEXT("KeypadP2_2"),
+			TEXT("KeypadP2_3"),
+			TEXT("KeypadP2_4"),
+			TEXT("KeypadP2_5"),
+			TEXT("KeypadP2_6"),
+			TEXT("KeypadP2_7"),
+			TEXT("KeypadP2_8"),
+			TEXT("KeypadP2_9"),
+			TEXT("KeypadP2_00"),
+			TEXT("KeypadP2InsertEject"),
 		};
 
 		class RawInputPad : public Python2Input, shared::rawinput::ParseRawInputCB
@@ -194,12 +194,12 @@ namespace usb_python2
 				return TEXT("Raw Input");
 			}
 
-			void UpdateKeyStates(std::wstring keybind) override;
-			bool GetKeyState(std::wstring keybind) override;
-			bool GetKeyStateOneShot(std::wstring keybind) override;
-			double GetKeyStateAnalog(std::wstring keybind) override;
-			bool IsKeybindAvailable(std::wstring keybind);
-			bool IsAnalogKeybindAvailable(std::wstring keybind);
+			void UpdateKeyStates(TSTDSTRING keybind) override;
+			bool GetKeyState(TSTDSTRING keybind) override;
+			bool GetKeyStateOneShot(TSTDSTRING keybind) override;
+			double GetKeyStateAnalog(TSTDSTRING keybind) override;
+			bool IsKeybindAvailable(TSTDSTRING keybind);
+			bool IsAnalogKeybindAvailable(TSTDSTRING keybind);
 
 			static int Configure(int port, const char* dev_type, void* data);
 
@@ -228,9 +228,9 @@ namespace usb_python2
 		{
 			std::vector<KeyMapping> mappings;
 
-			std::wstring devName;
+			wxString devName;
 #if _WIN32
-			std::wstring hidPath;
+			wxString hidPath;
 #endif
 		};
 
@@ -239,10 +239,10 @@ namespace usb_python2
 			int port;
 			const char* dev_type;
 
-			const std::vector<std::wstring> devList;
-			const std::vector<std::wstring> devListGroups;
+			const std::vector<wxString> devList;
+			const std::vector<wxString> devListGroups;
 
-			Python2DlgConfig(int p, const char* dev_type_, const std::vector<std::wstring>& devList, const std::vector<std::wstring>& devListGroups)
+			Python2DlgConfig(int p, const char* dev_type_, const std::vector<wxString>& devList, const std::vector<wxString>& devListGroups)
 				: port(p)
 				, dev_type(dev_type_)
 				, devList(devList)
@@ -255,15 +255,15 @@ namespace usb_python2
 		static MapVector mapVector;
 		static std::map<HANDLE, Mappings*> mappings;
 
-		static std::map<std::wstring, std::deque<InputStateUpdate>> keyStateUpdates;
-		static std::map<std::wstring, bool> isOneshotState;
-		static std::map<std::wstring, bool> currentKeyStates;
-		static std::map<std::wstring, int> currentInputStateKeyboard;
-		static std::map<std::wstring, int> currentInputStatePad;
-		static std::map<std::wstring, double> currentInputStateAnalog;
+		static std::map<TSTDSTRING, std::deque<InputStateUpdate>> keyStateUpdates;
+		static std::map<TSTDSTRING, bool> isOneshotState;
+		static std::map<TSTDSTRING, bool> currentKeyStates;
+		static std::map<TSTDSTRING, int> currentInputStateKeyboard;
+		static std::map<TSTDSTRING, int> currentInputStatePad;
+		static std::map<TSTDSTRING, double> currentInputStateAnalog;
 
 		static std::map<USHORT, bool> keyboardButtonIsPressed;
-		static std::map<std::wstring, std::map<uint32_t, bool>> gamepadButtonIsPressed;
+		static std::map<TSTDSTRING, std::map<uint32_t, bool>> gamepadButtonIsPressed;
 
 		void LoadMappings(const char* dev_type, MapVector& maps);
 		void SaveMappings(const char* dev_type, MapVector& maps);
