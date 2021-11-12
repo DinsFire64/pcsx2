@@ -192,13 +192,13 @@ namespace usb_python2
 		{
 			ScopedIniGroup cardReaderEntry(ini, L"CardReader");
 			wxString cardFilenameP1 = wxEmptyString;
-			ini.Entry(TEXT("Player1Card"), cardFilenameP1, wxEmptyString);
+			ini.Entry("Player1Card", cardFilenameP1, wxEmptyString);
 
 			wxString cardFilenameP2 = wxEmptyString;
-			ini.Entry(TEXT("Player2Card"), cardFilenameP2, wxEmptyString);
+			ini.Entry("Player2Card", cardFilenameP2, wxEmptyString);
 
-			Console.WriteLn(TEXT("Player 1 card filename: %s"), WX_STR(cardFilenameP1));
-			Console.WriteLn(TEXT("Player 2 card filename: %s"), WX_STR(cardFilenameP2));
+			Console.WriteLn("Player 1 card filename: %s", WX_STR(cardFilenameP1));
+			Console.WriteLn("Player 2 card filename: %s", WX_STR(cardFilenameP2));
 		}
 
 		const auto prevGameType = s->f.gameType;
@@ -207,7 +207,7 @@ namespace usb_python2
 		auto foundGroup = hini->GetFirstGroup(groupName, groupIdx);
 		while (foundGroup)
 		{
-			//Console.WriteLn(TEXT("Group: %s"), groupName);
+			//Console.WriteLn("Group: %s", groupName);
 
 			if (!groupName.Matches(selectedDevice))
 			{
@@ -219,11 +219,11 @@ namespace usb_python2
 
 			wxString tmp = wxEmptyString;
 
-			ini.Entry(TEXT("Name"), tmp, wxEmptyString);
-			Console.WriteLn(TEXT("Name: %s"), WX_STR(tmp));
+			ini.Entry("Name", tmp, wxEmptyString);
+			Console.WriteLn("Name: %s", WX_STR(tmp));
 
-			ini.Entry(TEXT("DongleBlackPath"), tmp, wxEmptyString);
-			Console.WriteLn(TEXT("DongleBlackPath: %s"), WX_STR(tmp));
+			ini.Entry("DongleBlackPath", tmp, wxEmptyString);
+			Console.WriteLn("DongleBlackPath: %s", WX_STR(tmp));
 			if (!tmp.IsEmpty())
 			{
 				wxFFile fin(tmp, "rb");
@@ -240,8 +240,8 @@ namespace usb_python2
 				}
 			}
 
-			ini.Entry(TEXT("DongleWhitePath"), tmp, wxEmptyString);
-			Console.WriteLn(TEXT("DongleWhitePath: %s"), WX_STR(tmp));
+			ini.Entry("DongleWhitePath", tmp, wxEmptyString);
+			Console.WriteLn("DongleWhitePath: %s", WX_STR(tmp));
 			if (!tmp.IsEmpty())
 			{
 				wxFFile fin(tmp, "rb");
@@ -258,15 +258,15 @@ namespace usb_python2
 				}
 			}
 
-			ini.Entry(TEXT("InputType"), tmp, wxEmptyString);
-			Console.WriteLn(TEXT("InputType: %s"), WX_STR(tmp));
+			ini.Entry("InputType", tmp, wxEmptyString);
+			Console.WriteLn("InputType: %s", WX_STR(tmp));
 			if (!tmp.IsEmpty())
 				s->f.gameType = atoi(tmp);
 			else
 				s->f.gameType = 0;
 
-			ini.Entry(TEXT("DipSwitch"), tmp, wxEmptyString);
-			Console.WriteLn(TEXT("DipSwitch: %s"), WX_STR(tmp));
+			ini.Entry("DipSwitch", tmp, wxEmptyString);
+			Console.WriteLn("DipSwitch: %s", WX_STR(tmp));
 			if (!tmp.IsEmpty())
 			{
 				for (size_t j = 0; j < 4 && j < tmp.size(); j++)
@@ -278,43 +278,43 @@ namespace usb_python2
 					s->f.dipSwitch[j] = '0';
 			}
 
-			ini.Entry(TEXT("HddImagePath"), tmp, wxEmptyString);
-			Console.WriteLn(TEXT("HddImagePath: %s"), WX_STR(tmp));
+			ini.Entry("HddImagePath", tmp, wxEmptyString);
+			Console.WriteLn("HddImagePath: %s", WX_STR(tmp));
 			if (!tmp.IsEmpty())
 				HddImageOverridePath = tmp;
 			else
 				HddImageOverridePath.clear();
 
-			ini.Entry(TEXT("HddIdPath"), tmp, wxEmptyString);
-			Console.WriteLn(TEXT("HddIdPath: %s"), WX_STR(tmp));
+			ini.Entry("HddIdPath", tmp, wxEmptyString);
+			Console.WriteLn("HddIdPath: %s", WX_STR(tmp));
 			if (!tmp.IsEmpty())
 				HddIdPath = tmp;
 			else
 				HddIdPath = L"";
 
-			ini.Entry(TEXT("IlinkIdPath"), tmp, wxEmptyString);
-			Console.WriteLn(TEXT("IlinkIdPath: %s"), WX_STR(tmp));
+			ini.Entry("IlinkIdPath", tmp, wxEmptyString);
+			Console.WriteLn("IlinkIdPath: %s", WX_STR(tmp));
 			if (!tmp.IsEmpty())
 				IlinkIdPath = tmp;
 			else
 				IlinkIdPath.clear();
 
-			ini.Entry(TEXT("GfdmFrameSizeFix"), tmp, wxEmptyString);
-			Console.WriteLn(TEXT("GfdmFrameSizeFix: %s"), WX_STR(tmp));
+			ini.Entry("GfdmFrameSizeFix", tmp, wxEmptyString);
+			Console.WriteLn("GfdmFrameSizeFix: %s", WX_STR(tmp));
 			if (!tmp.IsEmpty())
 				GfdmFrameSizeFixEnabled = tmp == "1";
 			else
 				GfdmFrameSizeFixEnabled = false;
 
-			ini.Entry(TEXT("Force31kHz"), tmp, wxEmptyString);
-			Console.WriteLn(TEXT("Force31kHz: %s"), WX_STR(tmp));
+			ini.Entry("Force31kHz", tmp, wxEmptyString);
+			Console.WriteLn("Force31kHz: %s", WX_STR(tmp));
 			if (!tmp.IsEmpty())
 				s->f.force31khz = tmp == "1";
 			else
 				s->f.force31khz = false;
 
-			ini.Entry(TEXT("PatchFile"), tmp, wxEmptyString);
-			Console.WriteLn(TEXT("PatchFile: %s"), WX_STR(tmp));
+			ini.Entry("PatchFile", tmp, wxEmptyString);
+			Console.WriteLn("PatchFile: %s", WX_STR(tmp));
 			if (!tmp.IsEmpty())
 				PatchFileOverridePath = tmp;
 			else
@@ -733,10 +733,10 @@ namespace usb_python2
 						// Setting this value too high or there will be latency with key presses.
 						if (jammaUpdateCounter >= 8)
 						{
-							CheckKeyState(TEXT("Test"), P2IO_JAMMA_IO_TEST);
-							CheckKeyState(TEXT("Service"), P2IO_JAMMA_IO_SERVICE);
-							CheckKeyState(TEXT("Coin1"), P2IO_JAMMA_IO_COIN1);
-							CheckKeyState(TEXT("Coin2"), P2IO_JAMMA_IO_COIN2);
+							CheckKeyState("Test", P2IO_JAMMA_IO_TEST);
+							CheckKeyState("Service", P2IO_JAMMA_IO_SERVICE);
+							CheckKeyState("Coin1", P2IO_JAMMA_IO_COIN1);
+							CheckKeyState("Coin2", P2IO_JAMMA_IO_COIN2);
 
 							// Python 2 games only accept coins via the P2IO directly, even though the game sees the JAMMA coin buttons returned here(?)
 							if (!(s->f.jammaIoStatus & P2IO_JAMMA_IO_COIN1))
@@ -767,35 +767,35 @@ namespace usb_python2
 
 							if (s->f.gameType == GAMETYPE_DM)
 							{
-								CheckKeyState(TEXT("DmSelectL"), P2IO_JAMMA_DM_SELECT_L);
-								CheckKeyState(TEXT("DmSelectR"), P2IO_JAMMA_DM_SELECT_R);
-								CheckKeyState(TEXT("DmStart"), P2IO_JAMMA_DM_START);
-								CheckKeyStateOneShot(TEXT("DmHihat"), P2IO_JAMMA_DM_HIHAT);
-								CheckKeyStateOneShot(TEXT("DmSnare"), P2IO_JAMMA_DM_SNARE);
-								CheckKeyStateOneShot(TEXT("DmBassDrum"), P2IO_JAMMA_DM_BASS_DRUM);
-								CheckKeyStateOneShot(TEXT("DmHighTom"), P2IO_JAMMA_DM_HIGH_TOM);
-								CheckKeyStateOneShot(TEXT("DmLowTom"), P2IO_JAMMA_DM_LOW_TOM);
-								CheckKeyStateOneShot(TEXT("DmCymbal"), P2IO_JAMMA_DM_CYMBAL);
+								CheckKeyState("DmSelectL", P2IO_JAMMA_DM_SELECT_L);
+								CheckKeyState("DmSelectR", P2IO_JAMMA_DM_SELECT_R);
+								CheckKeyState("DmStart", P2IO_JAMMA_DM_START);
+								CheckKeyStateOneShot("DmHihat", P2IO_JAMMA_DM_HIHAT);
+								CheckKeyStateOneShot("DmSnare", P2IO_JAMMA_DM_SNARE);
+								CheckKeyStateOneShot("DmBassDrum", P2IO_JAMMA_DM_BASS_DRUM);
+								CheckKeyStateOneShot("DmHighTom", P2IO_JAMMA_DM_HIGH_TOM);
+								CheckKeyStateOneShot("DmLowTom", P2IO_JAMMA_DM_LOW_TOM);
+								CheckKeyStateOneShot("DmCymbal", P2IO_JAMMA_DM_CYMBAL);
 							}
 							else if (s->f.gameType == GAMETYPE_GF)
 							{
-								CheckKeyState(TEXT("GfP1Start"), P2IO_JAMMA_GF_P1_START);
-								CheckKeyState(TEXT("GfP1NeckR"), P2IO_JAMMA_GF_P1_R);
-								CheckKeyState(TEXT("GfP1NeckG"), P2IO_JAMMA_GF_P1_G);
-								CheckKeyState(TEXT("GfP1NeckB"), P2IO_JAMMA_GF_P1_B);
-								CheckKeyState(TEXT("GfP1Pick"), P2IO_JAMMA_GF_P1_PICK);
-								CheckKeyState(TEXT("GfP1Wail"), P2IO_JAMMA_GF_P1_WAILING);
-								KnobStateInc(TEXT("GfP1EffectInc"), P2IO_JAMMA_GF_P1_EFFECT1, 0);
-								KnobStateDec(TEXT("GfP1EffectDec"), P2IO_JAMMA_GF_P1_EFFECT2, 0);
+								CheckKeyState("GfP1Start", P2IO_JAMMA_GF_P1_START);
+								CheckKeyState("GfP1NeckR", P2IO_JAMMA_GF_P1_R);
+								CheckKeyState("GfP1NeckG", P2IO_JAMMA_GF_P1_G);
+								CheckKeyState("GfP1NeckB", P2IO_JAMMA_GF_P1_B);
+								CheckKeyState("GfP1Pick", P2IO_JAMMA_GF_P1_PICK);
+								CheckKeyState("GfP1Wail", P2IO_JAMMA_GF_P1_WAILING);
+								KnobStateInc("GfP1EffectInc", P2IO_JAMMA_GF_P1_EFFECT1, 0);
+								KnobStateDec("GfP1EffectDec", P2IO_JAMMA_GF_P1_EFFECT2, 0);
 
-								CheckKeyState(TEXT("GfP2Start"), P2IO_JAMMA_GF_P2_START);
-								CheckKeyState(TEXT("GfP2NeckR"), P2IO_JAMMA_GF_P2_R);
-								CheckKeyState(TEXT("GfP2NeckG"), P2IO_JAMMA_GF_P2_G);
-								CheckKeyState(TEXT("GfP2NeckB"), P2IO_JAMMA_GF_P2_B);
-								CheckKeyStateOneShot(TEXT("GfP2Pick"), P2IO_JAMMA_GF_P2_PICK);
-								CheckKeyState(TEXT("GfP2Wail"), P2IO_JAMMA_GF_P2_WAILING);
-								KnobStateInc(TEXT("GfP2EffectInc"), P2IO_JAMMA_GF_P2_EFFECT1, 1);
-								KnobStateDec(TEXT("GfP2EffectDec"), P2IO_JAMMA_GF_P2_EFFECT2, 1);
+								CheckKeyState("GfP2Start", P2IO_JAMMA_GF_P2_START);
+								CheckKeyState("GfP2NeckR", P2IO_JAMMA_GF_P2_R);
+								CheckKeyState("GfP2NeckG", P2IO_JAMMA_GF_P2_G);
+								CheckKeyState("GfP2NeckB", P2IO_JAMMA_GF_P2_B);
+								CheckKeyStateOneShot("GfP2Pick", P2IO_JAMMA_GF_P2_PICK);
+								CheckKeyState("GfP2Wail", P2IO_JAMMA_GF_P2_WAILING);
+								KnobStateInc("GfP2EffectInc", P2IO_JAMMA_GF_P2_EFFECT1, 1);
+								KnobStateDec("GfP2EffectDec", P2IO_JAMMA_GF_P2_EFFECT2, 1);
 
 								s->f.jammaIoStatus |= P2IO_JAMMA_GF_P1_EFFECT3;
 								if (s->f.knobs[0] == 1)
@@ -815,37 +815,37 @@ namespace usb_python2
 							}
 							else if (s->f.gameType == GAMETYPE_DDR)
 							{
-								CheckKeyState(TEXT("DdrP1Start"), P2IO_JAMMA_DDR_P1_START);
-								CheckKeyState(TEXT("DdrP1SelectL"), P2IO_JAMMA_DDR_P1_LEFT);
-								CheckKeyState(TEXT("DdrP1SelectR"), P2IO_JAMMA_DDR_P1_RIGHT);
-								CheckKeyState(TEXT("DdrP1FootLeft"), P2IO_JAMMA_DDR_P1_FOOT_LEFT);
-								CheckKeyState(TEXT("DdrP1FootDown"), P2IO_JAMMA_DDR_P1_FOOT_DOWN);
-								CheckKeyState(TEXT("DdrP1FootUp"), P2IO_JAMMA_DDR_P1_FOOT_UP);
-								CheckKeyState(TEXT("DdrP1FootRight"), P2IO_JAMMA_DDR_P1_FOOT_RIGHT);
+								CheckKeyState("DdrP1Start", P2IO_JAMMA_DDR_P1_START);
+								CheckKeyState("DdrP1SelectL", P2IO_JAMMA_DDR_P1_LEFT);
+								CheckKeyState("DdrP1SelectR", P2IO_JAMMA_DDR_P1_RIGHT);
+								CheckKeyState("DdrP1FootLeft", P2IO_JAMMA_DDR_P1_FOOT_LEFT);
+								CheckKeyState("DdrP1FootDown", P2IO_JAMMA_DDR_P1_FOOT_DOWN);
+								CheckKeyState("DdrP1FootUp", P2IO_JAMMA_DDR_P1_FOOT_UP);
+								CheckKeyState("DdrP1FootRight", P2IO_JAMMA_DDR_P1_FOOT_RIGHT);
 
-								CheckKeyState(TEXT("DdrP2Start"), P2IO_JAMMA_DDR_P2_START);
-								CheckKeyState(TEXT("DdrP2SelectL"), P2IO_JAMMA_DDR_P2_LEFT);
-								CheckKeyState(TEXT("DdrP2SelectR"), P2IO_JAMMA_DDR_P2_RIGHT);
-								CheckKeyState(TEXT("DdrP2FootLeft"), P2IO_JAMMA_DDR_P2_FOOT_LEFT);
-								CheckKeyState(TEXT("DdrP2FootDown"), P2IO_JAMMA_DDR_P2_FOOT_DOWN);
-								CheckKeyState(TEXT("DdrP2FootUp"), P2IO_JAMMA_DDR_P2_FOOT_UP);
-								CheckKeyState(TEXT("DdrP2FootRight"), P2IO_JAMMA_DDR_P2_FOOT_RIGHT);
+								CheckKeyState("DdrP2Start", P2IO_JAMMA_DDR_P2_START);
+								CheckKeyState("DdrP2SelectL", P2IO_JAMMA_DDR_P2_LEFT);
+								CheckKeyState("DdrP2SelectR", P2IO_JAMMA_DDR_P2_RIGHT);
+								CheckKeyState("DdrP2FootLeft", P2IO_JAMMA_DDR_P2_FOOT_LEFT);
+								CheckKeyState("DdrP2FootDown", P2IO_JAMMA_DDR_P2_FOOT_DOWN);
+								CheckKeyState("DdrP2FootUp", P2IO_JAMMA_DDR_P2_FOOT_UP);
+								CheckKeyState("DdrP2FootRight", P2IO_JAMMA_DDR_P2_FOOT_RIGHT);
 							}
 							else if (s->f.gameType == GAMETYPE_THRILLDRIVE)
 							{
-								CheckKeyState(TEXT("ThrillDriveStart"), P2IO_JAMMA_THRILLDRIVE_START);
+								CheckKeyState("ThrillDriveStart", P2IO_JAMMA_THRILLDRIVE_START);
 
-								CheckKeyState(TEXT("ThrillDriveGearUp"), P2IO_JAMMA_THRILLDRIVE_GEARSHIFT_UP);
-								CheckKeyState(TEXT("ThrillDriveGearDown"), P2IO_JAMMA_THRILLDRIVE_GEARSHIFT_DOWN);
+								CheckKeyState("ThrillDriveGearUp", P2IO_JAMMA_THRILLDRIVE_GEARSHIFT_UP);
+								CheckKeyState("ThrillDriveGearDown", P2IO_JAMMA_THRILLDRIVE_GEARSHIFT_DOWN);
 							}
 							else if (s->f.gameType == GAMETYPE_TOYSMARCH)
 							{
-								CheckKeyState(TEXT("ToysMarchP1Start"), P2IO_JAMMA_TOYSMARCH_P1_START);
-								CheckKeyState(TEXT("ToysMarchP1SelectL"), P2IO_JAMMA_TOYSMARCH_P1_LEFT);
-								CheckKeyState(TEXT("ToysMarchP1SelectR"), P2IO_JAMMA_TOYSMARCH_P1_RIGHT);
-								CheckKeyState(TEXT("ToysMarchP2Start"), P2IO_JAMMA_TOYSMARCH_P2_START);
-								CheckKeyState(TEXT("ToysMarchP2SelectL"), P2IO_JAMMA_TOYSMARCH_P2_LEFT);
-								CheckKeyState(TEXT("ToysMarchP2SelectR"), P2IO_JAMMA_TOYSMARCH_P2_RIGHT);
+								CheckKeyState("ToysMarchP1Start", P2IO_JAMMA_TOYSMARCH_P1_START);
+								CheckKeyState("ToysMarchP1SelectL", P2IO_JAMMA_TOYSMARCH_P1_LEFT);
+								CheckKeyState("ToysMarchP1SelectR", P2IO_JAMMA_TOYSMARCH_P1_RIGHT);
+								CheckKeyState("ToysMarchP2Start", P2IO_JAMMA_TOYSMARCH_P2_START);
+								CheckKeyState("ToysMarchP2SelectL", P2IO_JAMMA_TOYSMARCH_P2_LEFT);
+								CheckKeyState("ToysMarchP2SelectR", P2IO_JAMMA_TOYSMARCH_P2_RIGHT);
 							}
 
 							jammaUpdateCounter = 0;
@@ -857,29 +857,29 @@ namespace usb_python2
 
 						if (s->f.gameType == GAMETYPE_THRILLDRIVE)
 						{
-							const auto isBrakePressed = s->p2dev->GetKeyState(TEXT("ThrillDriveBrake"));
+							const auto isBrakePressed = s->p2dev->GetKeyState("ThrillDriveBrake");
 							if (isBrakePressed)
 								s->f.brake = 0xffff;
 							else
-								s->f.brake = s->p2dev->GetKeyStateAnalog(TEXT("ThrillDriveBrakeAnalog"));
+								s->f.brake = s->p2dev->GetKeyStateAnalog("ThrillDriveBrakeAnalog");
 
-							const auto isAccelerationPressed = s->p2dev->GetKeyState(TEXT("ThrillDriveAccel"));
+							const auto isAccelerationPressed = s->p2dev->GetKeyState("ThrillDriveAccel");
 							if (isAccelerationPressed)
 							{
 								if (!isBrakePressed)
 									s->f.accel = 0xffff;
 							}
 							else
-								s->f.accel = s->p2dev->GetKeyStateAnalog(TEXT("ThrillDriveAccelAnalog"));
+								s->f.accel = s->p2dev->GetKeyStateAnalog("ThrillDriveAccelAnalog");
 
-							const auto isLeftWheelTurned = s->p2dev->GetKeyState(TEXT("ThrillDriveWheelLeft"));
-							const auto isRightWheelTurned = s->p2dev->GetKeyState(TEXT("ThrillDriveWheelRight"));
+							const auto isLeftWheelTurned = s->p2dev->GetKeyState("ThrillDriveWheelLeft");
+							const auto isRightWheelTurned = s->p2dev->GetKeyState("ThrillDriveWheelRight");
 							if (isLeftWheelTurned)
 								s->f.wheel = 0xffff;
 							else if (isRightWheelTurned)
 								s->f.wheel = 0;
-							else if (s->p2dev->IsAnalogKeybindAvailable(TEXT("ThrillDriveWheelAnalog")))
-								s->f.wheel = uint16_t(0xffff - (0xffff * s->p2dev->GetKeyStateAnalog(TEXT("ThrillDriveWheelAnalog"))));
+							else if (s->p2dev->IsAnalogKeybindAvailable("ThrillDriveWheelAnalog"))
+								s->f.wheel = uint16_t(0xffff - (0xffff * s->p2dev->GetKeyStateAnalog("ThrillDriveWheelAnalog")));
 							else
 								s->f.wheel = s->wheelCenter;
 
@@ -998,7 +998,7 @@ namespace usb_python2
 
 		std::string varApi;
 #ifdef _WIN32
-		std::wstring tmp;
+		std::string tmp;
 		LoadSetting(nullptr, port, TypeName(), N_DEVICE_API, tmp);
 		varApi = wstr_to_str(tmp);
 #else

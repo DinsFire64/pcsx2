@@ -83,7 +83,7 @@ namespace usb_python2
 			{
 				TSTDSTRING hid;
 
-				if (LoadSetting(dev_type, j, "RAW DEVICE", TEXT("HID"), hid) && !hid.empty() && !MapExists(maps, hid))
+				if (LoadSetting(dev_type, j, "RAW DEVICE", "HID", hid) && !hid.empty() && !MapExists(maps, hid))
 				{
 					Mappings m;
 					memset(&m, 0, sizeof(Mappings));
@@ -143,7 +143,7 @@ namespace usb_python2
 			{
 				if (it.mappings.size() > 0)
 				{
-					SaveSetting(dev_type, numDevice, "RAW DEVICE", TEXT("HID"), it.hidPath.ToStdWstring());
+					SaveSetting(dev_type, numDevice, "RAW DEVICE", "HID", it.hidPath.ToStdWstring());
 
 					std::map<int, std::vector<KeyMapping>> mapByKeybind;
 
@@ -312,13 +312,13 @@ namespace usb_python2
 				UINT bufferSize;
 				USAGE usage[32];
 				ULONG usageLength;
-				TCHAR name[1024] = {0};
+				char name[1024] = {0};
 				UINT nameSize = 1024;
 				UINT pSize;
 				RID_DEVICE_INFO devInfo;
-				std::wstring devName;
+				std::string devName;
 				Mappings* mapping = NULL;
-				TCHAR buf[256];
+				char buf[256];
 
 				//
 				// Get the preparsed data block
@@ -329,7 +329,7 @@ namespace usb_python2
 
 				if (devInfo.dwType == RIM_TYPEKEYBOARD)
 				{
-					devName = TEXT("Keyboard");
+					devName = "Keyboard";
 				}
 				else
 				{
@@ -384,7 +384,7 @@ namespace usb_python2
 					}
 
 					/*
-					swprintf_s(buf, TEXT("Captured KB button %d"), pRawInput->data.keyboard.VKey);
+					swprintf_s(buf, "Captured KB button %d", pRawInput->data.keyboard.VKey);
 					SendDlgItemMessage(dgHwnd2, IDC_STATIC_CAP, WM_SETTEXT, 0, (LPARAM)buf);
 					*/
 
@@ -415,7 +415,7 @@ namespace usb_python2
 					if (usageLength > 0) //Using first button only though
 					{
 						/*
-						swprintf_s(buf, TEXT("Captured HID button %d"), usage[0]);
+						swprintf_s(buf, "Captured HID button %d", usage[0]);
 						SendDlgItemMessage(dgHwnd2, IDC_STATIC_CAP, WM_SETTEXT, 0, (LPARAM)buf);
 						*/
 
@@ -463,7 +463,7 @@ namespace usb_python2
 											axisPass2 = false;
 
 											/*
-											swprintf_s(buf, TEXT("Captured axis %d"), axis);
+											swprintf_s(buf, "Captured axis %d", axis);
 											SendDlgItemMessage(dgHwnd2, IDC_STATIC_CAP, WM_SETTEXT, 0, (LPARAM)buf);
 											*/
 
@@ -489,7 +489,7 @@ namespace usb_python2
 										axisPass2 = false;
 
 										/*
-										swprintf_s(buf, TEXT("Captured hat switch %d"), value);
+										swprintf_s(buf, "Captured hat switch %d", value);
 										SendDlgItemMessage(dgHwnd2, IDC_STATIC_CAP, WM_SETTEXT, 0, (LPARAM)buf);
 										*/
 

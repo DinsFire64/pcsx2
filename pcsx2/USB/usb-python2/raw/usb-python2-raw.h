@@ -49,121 +49,121 @@ namespace usb_python2
 			bool state;
 		};
 
-		const std::vector<TCHAR*> axisLabelList = {
-			TEXT("X"),
-			TEXT("Y"),
-			TEXT("Z"),
-			TEXT("RX"),
-			TEXT("RY"),
-			TEXT("RZ")};
+		const std::vector<std::string> axisLabelList = {
+			"X",
+			"Y",
+			"Z",
+			"RX",
+			"RY",
+			"RZ"};
 
-		const std::vector<TCHAR*> buttonLabelList = {
+		const std::vector<std::string> buttonLabelList = {
 			// Machine
-			TEXT("Test"),
-			TEXT("Service"),
-			TEXT("Coin1"),
-			TEXT("Coin2"),
+			"Test",
+			"Service",
+			"Coin1",
+			"Coin2",
 
 			// Guitar Freaks
-			TEXT("GfP1Start"),
-			TEXT("GfP1Pick"),
-			TEXT("GfP1Wail"),
-			TEXT("GfP1EffectInc"),
-			TEXT("GfP1EffectDec"),
-			TEXT("GfP1NeckR"),
-			TEXT("GfP1NeckG"),
-			TEXT("GfP1NeckB"),
+			"GfP1Start",
+			"GfP1Pick",
+			"GfP1Wail",
+			"GfP1EffectInc",
+			"GfP1EffectDec",
+			"GfP1NeckR",
+			"GfP1NeckG",
+			"GfP1NeckB",
 
-			TEXT("GfP2Start"),
-			TEXT("GfP2Pick"),
-			TEXT("GfP2Wail"),
-			TEXT("GfP2EffectInc"),
-			TEXT("GfP2EffectDec"),
-			TEXT("GfP2NeckR"),
-			TEXT("GfP2NeckG"),
-			TEXT("GfP2NeckB"),
+			"GfP2Start",
+			"GfP2Pick",
+			"GfP2Wail",
+			"GfP2EffectInc",
+			"GfP2EffectDec",
+			"GfP2NeckR",
+			"GfP2NeckG",
+			"GfP2NeckB",
 
 			// Drummania
-			TEXT("DmStart"),
-			TEXT("DmSelectL"),
-			TEXT("DmSelectR"),
-			TEXT("DmHihat"),
-			TEXT("DmSnare"),
-			TEXT("DmHighTom"),
-			TEXT("DmLowTom"),
-			TEXT("DmCymbal"),
-			TEXT("DmBassDrum"),
+			"DmStart",
+			"DmSelectL",
+			"DmSelectR",
+			"DmHihat",
+			"DmSnare",
+			"DmHighTom",
+			"DmLowTom",
+			"DmCymbal",
+			"DmBassDrum",
 
 			// DDR
-			TEXT("DdrP1Start"),
-			TEXT("DdrP1SelectL"),
-			TEXT("DdrP1SelectR"),
-			TEXT("DdrP1FootLeft"),
-			TEXT("DdrP1FootDown"),
-			TEXT("DdrP1FootUp"),
-			TEXT("DdrP1FootRight"),
+			"DdrP1Start",
+			"DdrP1SelectL",
+			"DdrP1SelectR",
+			"DdrP1FootLeft",
+			"DdrP1FootDown",
+			"DdrP1FootUp",
+			"DdrP1FootRight",
 
-			TEXT("DdrP2Start"),
-			TEXT("DdrP2SelectL"),
-			TEXT("DdrP2SelectR"),
-			TEXT("DdrP2FootLeft"),
-			TEXT("Ddr2FootDown"),
-			TEXT("Ddr2FootUp"),
-			TEXT("DdrP2FootRight"),
+			"DdrP2Start",
+			"DdrP2SelectL",
+			"DdrP2SelectR",
+			"DdrP2FootLeft",
+			"Ddr2FootDown",
+			"Ddr2FootUp",
+			"DdrP2FootRight",
 
 			// Thrill Drive
-			TEXT("ThrillDriveStart"),
-			TEXT("ThrillDriveGearUp"),
-			TEXT("ThrillDriveGearDown"),
-			TEXT("ThrillDriveWheelAnalog"),
-			TEXT("ThrillDriveWheelLeft"),
-			TEXT("ThrillDriveWheelRight"),
-			TEXT("ThrillDriveAccelAnalog"),
-			TEXT("ThrillDriveAccel"),
-			TEXT("ThrillDriveBrake"),
-			TEXT("ThrillDriveBrakeAnalog"),
-			TEXT("ThrillDriveSeatbelt"),
+			"ThrillDriveStart",
+			"ThrillDriveGearUp",
+			"ThrillDriveGearDown",
+			"ThrillDriveWheelAnalog",
+			"ThrillDriveWheelLeft",
+			"ThrillDriveWheelRight",
+			"ThrillDriveAccelAnalog",
+			"ThrillDriveAccel",
+			"ThrillDriveBrake",
+			"ThrillDriveBrakeAnalog",
+			"ThrillDriveSeatbelt",
 
 			// Toy's March
-			TEXT("ToysMarchP1Start"),
-			TEXT("ToysMarchP1SelectL"),
-			TEXT("ToysMarchP1SelectR"),
-			TEXT("ToysMarchP1DrumL"),
-			TEXT("ToysMarchP1DrumR"),
-			TEXT("ToysMarchP1Cymbal"),
+			"ToysMarchP1Start",
+			"ToysMarchP1SelectL",
+			"ToysMarchP1SelectR",
+			"ToysMarchP1DrumL",
+			"ToysMarchP1DrumR",
+			"ToysMarchP1Cymbal",
 
-			TEXT("ToysMarchP2Start"),
-			TEXT("ToysMarchP2SelectL"),
-			TEXT("ToysMarchP2SelectR"),
-			TEXT("ToysMarchP2DrumL"),
-			TEXT("ToysMarchP2DrumR"),
-			TEXT("ToysMarchP2Cymbal"),
+			"ToysMarchP2Start",
+			"ToysMarchP2SelectL",
+			"ToysMarchP2SelectR",
+			"ToysMarchP2DrumL",
+			"ToysMarchP2DrumR",
+			"ToysMarchP2Cymbal",
 
 			// ICCA Card Reader
-			TEXT("KeypadP1_0"),
-			TEXT("KeypadP1_1"),
-			TEXT("KeypadP1_2"),
-			TEXT("KeypadP1_3"),
-			TEXT("KeypadP1_4"),
-			TEXT("KeypadP1_5"),
-			TEXT("KeypadP1_6"),
-			TEXT("KeypadP1_7"),
-			TEXT("KeypadP1_8"),
-			TEXT("KeypadP1_9"),
-			TEXT("KeypadP1_00"),
-			TEXT("KeypadP1InsertEject"),
-			TEXT("KeypadP2_0"),
-			TEXT("KeypadP2_1"),
-			TEXT("KeypadP2_2"),
-			TEXT("KeypadP2_3"),
-			TEXT("KeypadP2_4"),
-			TEXT("KeypadP2_5"),
-			TEXT("KeypadP2_6"),
-			TEXT("KeypadP2_7"),
-			TEXT("KeypadP2_8"),
-			TEXT("KeypadP2_9"),
-			TEXT("KeypadP2_00"),
-			TEXT("KeypadP2InsertEject"),
+			"KeypadP1_0",
+			"KeypadP1_1",
+			"KeypadP1_2",
+			"KeypadP1_3",
+			"KeypadP1_4",
+			"KeypadP1_5",
+			"KeypadP1_6",
+			"KeypadP1_7",
+			"KeypadP1_8",
+			"KeypadP1_9",
+			"KeypadP1_00",
+			"KeypadP1InsertEject",
+			"KeypadP2_0",
+			"KeypadP2_1",
+			"KeypadP2_2",
+			"KeypadP2_3",
+			"KeypadP2_4",
+			"KeypadP2_5",
+			"KeypadP2_6",
+			"KeypadP2_7",
+			"KeypadP2_8",
+			"KeypadP2_9",
+			"KeypadP2_00",
+			"KeypadP2InsertEject",
 		};
 
 		class RawInputPad : public Python2Input, shared::rawinput::ParseRawInputCB
@@ -191,7 +191,7 @@ namespace usb_python2
 
 			static const TCHAR* Name()
 			{
-				return TEXT("Raw Input");
+				return "Raw Input";
 			}
 
 			void UpdateKeyStates(TSTDSTRING keybind) override;
@@ -255,15 +255,15 @@ namespace usb_python2
 		static MapVector mapVector;
 		static std::map<HANDLE, Mappings*> mappings;
 
-		static std::map<TSTDSTRING, std::deque<InputStateUpdate>> keyStateUpdates;
-		static std::map<TSTDSTRING, bool> isOneshotState;
-		static std::map<TSTDSTRING, bool> currentKeyStates;
-		static std::map<TSTDSTRING, int> currentInputStateKeyboard;
-		static std::map<TSTDSTRING, int> currentInputStatePad;
-		static std::map<TSTDSTRING, double> currentInputStateAnalog;
+		static std::map<std::string std::deque<InputStateUpdate>> keyStateUpdates;
+		static std::map<std::string bool> isOneshotState;
+		static std::map<std::string bool> currentKeyStates;
+		static std::map<std::string int> currentInputStateKeyboard;
+		static std::map<std::string int> currentInputStatePad;
+		static std::map<std::string double> currentInputStateAnalog;
 
 		static std::map<USHORT, bool> keyboardButtonIsPressed;
-		static std::map<TSTDSTRING, std::map<uint32_t, bool>> gamepadButtonIsPressed;
+		static std::map<std::string std::map<uint32_t, bool>> gamepadButtonIsPressed;
 
 		void LoadMappings(const char* dev_type, MapVector& maps);
 		void SaveMappings(const char* dev_type, MapVector& maps);

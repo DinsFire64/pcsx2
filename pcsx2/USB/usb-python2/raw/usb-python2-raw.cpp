@@ -15,7 +15,7 @@
 
 #include "PrecompiledHeader.h"
 #include "USB/USB.h"
-#include "USB/Win32/Config_usb.h"
+// #include "USB/Win32/Config_usb.h"
 #include "usb-python2-raw.h"
 
 #include <wx/fileconf.h>
@@ -43,7 +43,7 @@ namespace usb_python2
 			PHIDP_VALUE_CAPS pValueCaps = NULL;
 			UINT bufferSize = 0;
 			ULONG usageLength, value;
-			TCHAR name[1024] = {0};
+			char name[1024] = {0};
 			UINT nameSize = 1024;
 			RID_DEVICE_INFO devInfo = {0};
 			TSTDSTRING devName;
@@ -223,7 +223,7 @@ namespace usb_python2
 
 			for (auto& it : mapVector)
 			{
-				if (!it.hidPath.compare(TEXT("Keyboard")))
+				if (!it.hidPath.compare("Keyboard"))
 				{
 					mapping = &it;
 					break;
